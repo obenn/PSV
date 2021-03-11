@@ -5,7 +5,7 @@ def get_model_from_file(model_name="model.json"):
     with open(model_name, "r") as f:
         return json.load(f)
 
-def get_model_template(learning_rate=0.5, discount_factor=0.5, epsilon=0.1):
+def get_model_template(learning_rate=0.1, discount_factor=0.5, epsilon=0.5):
     return {
         'params': {
             'learning_rate': learning_rate,
@@ -17,7 +17,7 @@ def get_model_template(learning_rate=0.5, discount_factor=0.5, epsilon=0.1):
 
 def write_model_to_file(model, model_name='model.json'):
     with open(model_name, "w+") as f:
-        json.dump(data, f)
+        json.dump(model, f)
 
 def train_model_once(model, gameclass):
     game = gameclass()
@@ -63,7 +63,6 @@ def train_callback(model, p1, p2, outcome):
             for entry in entries:
                 if entry[1] > max_next:
                     max_next = entry[1]
-            reward *= 0.9
 
 def get_training_move(model, game):
     q_table = model["q_table"]
@@ -97,14 +96,25 @@ def playtest(model, gameclass, p1=True):
         game.do_move(moves[sel-1])
         if game.over:
             break
-        tmove = get_training_move(model, game)
+        tmove = get_move(model, game)
         game.do_move(tmove)
         print(f"Computer played: {tmove}")
 
 if __name__ == '__main__':
     import checkersgame
-    model = get_model_template()
-    for i in range(100000):
+    from tqdm import tqdm
+    import os
+    if not os.path.isfile('model.json'):
+        model = get_model_template()
+    else:
+        model = get_model_from_file()
+    reps = 1000000
+    model['params']['epsilon'] = 0.5
+    model['params']['discount_factor'] = 0.1
+    init_df = model['params']['discount_factor']
+    for _ in tqdm(range(reps)):
+        model['params']['discount_factor'] += (1/reps)*(1-init_df)
         train_model_once(model, checkersgame.Game)
+    write_model_to_file(model)
     playtest(model, checkersgame.Game, p1=False)
     
