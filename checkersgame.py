@@ -180,7 +180,7 @@ class Game:
                 s += str(c.piece)
             else:
                 s += 'x'
-        return f"{self.turn}+{s}"
+        return f"{self.turn[0]}+{s}"
     
     def __repr__(self):
         s = ''
@@ -192,8 +192,73 @@ class Game:
 
             if i % 4 == 0:
                 s += '\n'
-
         return s
+    
+
+    @staticmethod
+    def approximator(prev, new):
+        # Extract voting coefficients from two sets of state/move pairs
+        if prev[0][0] != new[0][0]:
+            return
+        for nmove in new[1]:
+            for pmove in prev[1]:
+                if pmove[1] != 0:
+                    coeff = Game.mcompare(prev[0][2:], pmove[0], new[0][2:], nmove[0])
+                    if coeff:
+                        nmove[1][0] += coeff * pmove[1]
+                        nmove[1][1] += 1
+
+    @staticmethod
+    def mcompare(pg, pm, ng, nm):
+        def lists_are_equal(l1, l2):
+            from collections.abc import Iterable
+            for a, b in zip(l1, l2):
+                if isinstance(a, Iterable) and isinstance(b, Iterable):
+                    if not lists_are_equal(a, b):
+                        return False
+                else:
+                    if a != b:
+                        return False
+            return True
+        ntog = lambda n : ((-(n%4) + 3)*2 + ((n//4) % 2), n // 4)
+        gton = lambda g : 4*g[1] - (g[0] //2) + 3
+        ghasval = lambda g : (g[0] + g[1]) % 2 == 0
+        if not isinstance(pm[1], int) or not isinstance(nm[1], int):
+            if isinstance(pm[1], int) or isinstance(nm[1], int):
+                return False
+            if len(pm[1]) != len(nm[1]):
+                return False
+            for i in range(len(pm[1])):
+                if pg[pm[1][i][0]] != ng[nm[1][i][0]]:
+                    return False
+            pm = [pm[0]] + [m[1] for m in pm[1]]
+            nm = [nm[0]] + [m[1] for m in nm[1]]
+
+        pmn = [ntog(n) for n in pm]
+        nmn = [ntog(n) for n in nm]
+        diff = [pmn[0][0] - nmn[0][0], pmn[0][1] - nmn[0][1]]
+        nmnd = [(m[0] + diff[0], m[1] + diff[1]) for m in nmn]
+        if lists_are_equal(pmn, nmnd):
+            similar_cells = 0
+            if diff[0] < 0:
+                nrangex = (0, 7 + diff[0])
+            else:
+                nrangex = (diff[0], 7)
+
+            if diff[1] < 0:
+                nrangey = (0, 7 + diff[1])
+            else:
+                nrangey = (diff[1], 7)
+
+            nrange = (nrangex, nrangey)
+            for i in range(nrange[0][0], nrange[0][1] + 1):
+                for j in range(nrange[1][0], nrange[1][1] + 1):
+                    if ghasval((i, j)):
+                        if ng[gton((i, j))] == pg[gton((i - diff[0], j - diff[1]))]:
+                            similar_cells += 1
+                    else:
+                        similar_cells += 1
+            return similar_cells
 
 if __name__ == '__main__':
     game = Game()

@@ -35,6 +35,17 @@ def train_model_once(model, gameclass):
     
     train_callback(model, p1moves, p2moves, game.outcome())
 
+def lists_are_equal(l1, l2):
+    from collections.abc import Iterable
+    for a, b in zip(l1, l2):
+        if isinstance(a, Iterable) and isinstance(b, Iterable):
+            if not lists_are_equal(a, b):
+                return False
+        else:
+            if a != b:
+                return False
+    return True
+
 def train_callback(model, p1, p2, outcome):
     params = model["params"]
     learning_rate = params["learning_rate"]
@@ -52,8 +63,8 @@ def train_callback(model, p1, p2, outcome):
             move_entry = None
 
             for entry in entries:
-                if entry[0] == move:
-                    move_entry = entry
+                if lists_are_equal(entry[0], move):
+                    move_entry = entry 
 
             move_entry[1] = move_entry[1] + learning_rate * (
                 reward + discount_factor * max_next - move_entry[1]
@@ -67,26 +78,39 @@ def train_callback(model, p1, p2, outcome):
 def get_training_move(model, game):
     q_table = model["q_table"]
     epsilon = model["params"]["epsilon"]
-    if str(game) not in q_table.keys():
+    if str(game) not in q_table:
         q_table[str(game)] = [
                 [move, 0] for move in game.get_playable_moves()
             ]
-    if random.random() > epsilon:
-        return get_move(model, game)
-    else:
         return game.random_move()
+    else:
+        if random.random() > epsilon:
+            return get_move(model, game)
+        else:
+            return game.random_move()
     
-def get_move(model, game):
+def get_move(model, game, approximator=None):
     q_table = model["q_table"]
+    if not str(game) in q_table and approximator:
+        return approximate(q_table, game, approximator)
     return  [
         x[0]
         for x in sorted(q_table[str(game)], reverse=True, key=lambda x: x[1])
     ][0]
 
+def approximate(q_table, game, approximator):
+    moves = game.get_playable_moves()
+    move_scores = [[move, [0,0]] for move in moves]
+    ngame =  (str(game), move_scores)
+    for entry in q_table.items():
+        approximator(entry, ngame)
+    move_scores.sort(key=lambda ms: ms[1][0] / ms[1][1] if ms[1][1] > 0 else 0, reverse=True)
+    return move_scores[0][0]
+
 def playtest(model, gameclass, p1=True):
     game = gameclass()
     if not p1:
-        game.do_move(get_training_move(model, game))
+        game.do_move(get_move(model, game, approximator=gameclass.approximator))
     while not game.over:
         print(game.__repr__())
         moves = game.get_playable_moves()
@@ -96,9 +120,24 @@ def playtest(model, gameclass, p1=True):
         game.do_move(moves[sel-1])
         if game.over:
             break
-        tmove = get_move(model, game)
+        tmove = get_move(model, game, approximator=gameclass.approximator)
         game.do_move(tmove)
         print(f"Computer played: {tmove}")
+    print(f"Winner is {game.winner}")
+
+def random_test(model, gameclass, p1=True):
+    game = gameclass()
+    if not p1:
+        print("Model is black")
+        game.do_move(get_move(model, game, approximator=gameclass.approximator))
+    else:
+        print("Model is white")
+    while not game.over:
+        game.do_move(game.random_move())
+        if game.over:
+            break
+        game.do_move(get_move(model, game, approximator=gameclass.approximator))
+    print(f"Winner is {game.winner}")
 
 if __name__ == '__main__':
     import checkersgame
@@ -108,13 +147,13 @@ if __name__ == '__main__':
         model = get_model_template()
     else:
         model = get_model_from_file()
-    reps = 1000000
+    reps = 0
     model['params']['epsilon'] = 0.5
     model['params']['discount_factor'] = 0.1
     init_df = model['params']['discount_factor']
     for _ in tqdm(range(reps)):
         model['params']['discount_factor'] += (1/reps)*(1-init_df)
         train_model_once(model, checkersgame.Game)
-    write_model_to_file(model)
-    playtest(model, checkersgame.Game, p1=False)
+    #write_model_to_file(model)
+    playtest(model, checkersgame.Game, p1=True)
     
