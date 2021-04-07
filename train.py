@@ -107,7 +107,7 @@ def approximate(q_table, game, approximator):
     move_scores.sort(key=lambda ms: ms[1][0] / ms[1][1] if ms[1][1] > 0 else 0, reverse=True)
     return move_scores[0][0]
 
-def playtest(model, gameclass, p1=True):
+def play_test(model, gameclass, p1=True):
     game = gameclass()
     if not p1:
         game.do_move(get_move(model, game, approximator=gameclass.approximator))
@@ -126,6 +126,8 @@ def playtest(model, gameclass, p1=True):
     print(f"Winner is {game.winner}")
 
 def random_test(model, gameclass, p1=True):
+    from time import time
+    start = time()
     game = gameclass()
     if not p1:
         print("Model is black")
@@ -138,6 +140,7 @@ def random_test(model, gameclass, p1=True):
             break
         game.do_move(get_move(model, game, approximator=gameclass.approximator))
     print(f"Winner is {game.winner}")
+    return p1 == (game.winner == 'white'), time() - start
 
 if __name__ == '__main__':
     import checkersgame
@@ -147,7 +150,7 @@ if __name__ == '__main__':
         model = get_model_template()
     else:
         model = get_model_from_file()
-    reps = 0
+    reps = 1000
     model['params']['epsilon'] = 0.5
     model['params']['discount_factor'] = 0.1
     init_df = model['params']['discount_factor']
@@ -155,5 +158,12 @@ if __name__ == '__main__':
         model['params']['discount_factor'] += (1/reps)*(1-init_df)
         train_model_once(model, checkersgame.Game)
     #write_model_to_file(model)
-    playtest(model, checkersgame.Game, p1=True)
+    #play_test(model, checkersgame.Game, p1=True)
+    results = []
+    times = []
+    for _ in range(10):
+        r, t = random_test(model, checkersgame.Game, p1=True)
+        results.append(r)
+        times.append(t)
+    print(results, times)
     

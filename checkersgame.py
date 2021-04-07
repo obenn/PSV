@@ -25,13 +25,13 @@ class Cell:
             for i in (0, 1):
                 if self.above[i] and self.above[i].piece and self.above[i].piece.colour != colour:
                     if self.above[i].above[i] and self.above[i].above[i].piece == None:
-                        if self.above[i].above[i] not in exclude:
+                        if self.above[i] not in exclude:
                             jumps.append((self.above[i], self.above[i].above[i]))
         if colour == 'white' or king:
             for i in (0, 1):
                 if self.below[i] and self.below[i].piece and self.below[i].piece.colour != colour:
                     if self.below[i].below[i] and self.below[i].below[i].piece == None:
-                        if self.below[i].below[i] not in exclude:
+                        if self.below[i] not in exclude:
                             jumps.append((self.below[i], self.below[i].below[i]))
         return jumps
         
@@ -52,14 +52,12 @@ class Cell:
         return [(self.index, c.index) for c in self.possible_moves(self.piece.colour, self.piece.king)]
     
     def valid_jumps(self):
-        # TODO: RECURSIVE FOR ALL ACTUAL JUMPS
-        #return [(self.index, ((s.index, d.index),)) for s, d in self.possible_jumps(self.piece.colour, self.piece.king)]
         jump_paths = [[j] for j in self.possible_jumps(self.piece.colour, self.piece.king)]
         done = False
         while not done:
             jump_paths_new = []
             for path in jump_paths:
-                npaths = path[-1][1].possible_jumps(self.piece.colour, self.piece.king, exclude=[p[1] for p in path])
+                npaths = path[-1][1].possible_jumps(self.piece.colour, self.piece.king, exclude=[p[0] for p in path])
                 if npaths:
                     for p in npaths:
                         jump_paths_new.append(path + [p])
@@ -258,7 +256,7 @@ class Game:
                             similar_cells += 1
                     else:
                         similar_cells += 1
-            return similar_cells
+            return similar_cells / 64
 
 if __name__ == '__main__':
     game = Game()
