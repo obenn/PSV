@@ -103,7 +103,7 @@ class Game:
 
         black_pieces = [Piece('black') for _ in range(12)]
         white_pieces = [Piece('white') for _ in range(12)]
-        board = [Cell(i, p, self) for i, p in enumerate(self.black_pieces + ([None]*8) + self.white_pieces)]
+        board = [Cell(i, p, self) for i, p in enumerate(black_pieces + ([None]*8) + white_pieces)]
 
         for i in range(len(board)):
             if i % 8 == 3:
