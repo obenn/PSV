@@ -15,6 +15,17 @@ def get_model_template(learning_rate=0.1, discount_factor=0.5, epsilon=0.5):
         'q_table': {},
     }
 
+def get_model_template_sqlite(learning_rate=0.1, discount_factor=0.5, epsilon=0.5, sqlitedb='./qtable.sqlite'):
+    from sqlitedict import SqliteDict
+    return {
+        'params': {
+            'learning_rate': learning_rate,
+            'discount_factor': discount_factor,
+            'epsilon': epsilon,
+        },
+        'q_table': SqliteDict(sqlitedb, autocommit=True),
+    }
+
 def write_model_to_file(model, model_name='model.json'):
     with open(model_name, "w+") as f:
         json.dump(model, f)
@@ -89,10 +100,13 @@ def get_training_move(model, game):
         else:
             return game.random_move()
     
-def get_move(model, game, approximator=None):
+def get_move(model, game, approximator=None, random_override=False):
     q_table = model["q_table"]
     if not str(game) in q_table and approximator:
-        return approximate(q_table, game, approximator)
+        if random_override:
+            return game.random_move()
+        else:
+            return approximate(q_table, game, approximator)
     return  [
         x[0]
         for x in sorted(q_table[str(game)], reverse=True, key=lambda x: x[1])
@@ -125,45 +139,25 @@ def play_test(model, gameclass, p1=True):
         print(f"Computer played: {tmove}")
     print(f"Winner is {game.winner}")
 
-def random_test(model, gameclass, p1=True):
+def random_test(model, gameclass, p1=True, random_override=False, verbose=False):
     from time import time
     start = time()
     game = gameclass()
     if not p1:
-        print("Model is black")
-        game.do_move(get_move(model, game, approximator=gameclass.approximator))
+        if verbose:
+            print("Model is black")
+        game.do_move(get_move(model, game, approximator=gameclass.approximator, random_override=random_override))
     else:
-        print("Model is white")
+        if verbose:
+            print("Model is white")
     while not game.over:
         game.do_move(game.random_move())
         if game.over:
             break
-        game.do_move(get_move(model, game, approximator=gameclass.approximator))
-    print(f"Winner is {game.winner}")
+        game.do_move(get_move(model, game, approximator=gameclass.approximator, random_override=random_override))
+    if verbose:
+        print(f"Winner is {game.winner}")
     return p1 == (game.winner == 'white'), time() - start
 
 if __name__ == '__main__':
-    import checkersgame
-    from tqdm import tqdm
-    import os
-    if not os.path.isfile('model.json'):
-        model = get_model_template()
-    else:
-        model = get_model_from_file()
-    reps = 1000
-    model['params']['epsilon'] = 0.5
-    model['params']['discount_factor'] = 0.1
-    init_df = model['params']['discount_factor']
-    for _ in tqdm(range(reps)):
-        model['params']['discount_factor'] += (1/reps)*(1-init_df)
-        train_model_once(model, checkersgame.Game)
-    #write_model_to_file(model)
-    #play_test(model, checkersgame.Game, p1=True)
-    results = []
-    times = []
-    for _ in range(10):
-        r, t = random_test(model, checkersgame.Game, p1=True)
-        results.append(r)
-        times.append(t)
-    print(results, times)
-    
+    pass
