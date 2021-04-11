@@ -152,6 +152,7 @@ class Game:
         cln.moves_played = self.moves_played
         cln.over = self.over
         cln.winner = self.winner
+        return cln
 
     
     def outcome(self):
