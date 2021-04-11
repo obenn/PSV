@@ -17,15 +17,6 @@ def train_and_test(reps, kto, testgames):
 
     results = []
     times = []
-    print("Playing kto")
-    for i in tqdm(range(testgames)):
-        r, t = train.random_test(model, checkersgame.Game, p1=i > (testgames/2), keep_training_override=kto)
-        results.append(r)
-        times.append(t)
-    print(f"Won {sum(results)}/{testgames} games, average time of {mean(times)} with stdev {stdev(times)}")
-
-    results = []
-    times = []
     print("Playing model")
     for i in tqdm(range(testgames)):
         r, t = train.random_test(model, checkersgame.Game, p1=i > (testgames/2))
@@ -33,6 +24,15 @@ def train_and_test(reps, kto, testgames):
         times.append(t)
     print(f"Won {sum(results)}/{testgames} games, average time of {mean(times)} with stdev {stdev(times)}")
 
+
+    results = []
+    times = []
+    print("Playing kto")
+    for i in tqdm(range(testgames)):
+        r, t = train.random_test(model, checkersgame.Game, p1=i > (testgames/2), keep_training_override=kto)
+        results.append(r)
+        times.append(t)
+    print(f"Won {sum(results)}/{testgames} games, average time of {mean(times)} with stdev {stdev(times)}")
 
     results = []
     times = []
