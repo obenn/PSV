@@ -1,3 +1,6 @@
+import random
+from collections.abc import Iterable
+
 class Piece:
     def __init__(self, colour):
         self.colour = colour
@@ -164,7 +167,6 @@ class Game:
             self.winner = 'black' if self.turn == 'white' else 'white'
     
     def random_move(self):
-        import random
         return random.choice(self.get_playable_moves())
 
     def do_random_move(self):
@@ -209,7 +211,6 @@ class Game:
     @staticmethod
     def mcompare(pg, pm, ng, nm):
         def lists_are_equal(l1, l2):
-            from collections.abc import Iterable
             for a, b in zip(l1, l2):
                 if isinstance(a, Iterable) and isinstance(b, Iterable):
                     if not lists_are_equal(a, b):

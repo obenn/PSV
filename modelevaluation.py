@@ -1,9 +1,10 @@
 import train
+import sys
 import checkersgame
 from tqdm import tqdm
+from statistics import mean, stdev
 
 def train_and_test(reps, testgames):
-    from statistics import mean, stdev
     print(f"Training {reps} reps and playing {testgames} testgames.")
     model = train.get_model_template()
     model['params']['epsilon'] = 0.5
@@ -33,7 +34,6 @@ def train_and_test(reps, testgames):
 
 
 if __name__ == '__main__':
-    import sys
     trains = int(sys.argv[1])
     tests = int(sys.argv[2])
     train_and_test(trains, tests)

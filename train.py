@@ -1,5 +1,7 @@
 import json
+from collections.abc import Iterable
 import random
+from time import time
 
 def get_model_from_file(model_name="model.json"):
     with open(model_name, "r") as f:
@@ -47,7 +49,6 @@ def train_model_once(model, gameclass):
     train_callback(model, p1moves, p2moves, game.outcome())
 
 def lists_are_equal(l1, l2):
-    from collections.abc import Iterable
     for a, b in zip(l1, l2):
         if isinstance(a, Iterable) and isinstance(b, Iterable):
             if not lists_are_equal(a, b):
@@ -140,7 +141,6 @@ def play_test(model, gameclass, p1=True):
     print(f"Winner is {game.winner}")
 
 def random_test(model, gameclass, p1=True, random_override=False, verbose=False):
-    from time import time
     start = time()
     game = gameclass()
     if not p1:
