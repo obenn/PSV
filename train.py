@@ -32,8 +32,7 @@ def write_model_to_file(model, model_name='model.json'):
     with open(model_name, "w+") as f:
         json.dump(model, f)
 
-def train_model_once(model, gameclass):
-    game = gameclass()
+def train_model_once(model, game):
     p1 = True
     p1moves = []
     p2moves = []
@@ -101,10 +100,17 @@ def get_training_move(model, game):
         else:
             return game.random_move()
     
-def get_move(model, game, approximator=None, random_override=False):
+def get_move(model, game, approximator=None, random_override=False, keep_training_override=None):
     q_table = model["q_table"]
     if not str(game) in q_table and approximator:
-        if random_override:
+        if keep_training_override:
+            reps = keep_training_override
+            model['params']['discount_factor'] = 0.1
+            init_df = model['params']['discount_factor']
+            for _ in range(reps):
+                model['params']['discount_factor'] += (1/reps)*(1-init_df)
+                train_model_once(model, game.clone())
+        elif random_override:
             return game.random_move()
         else:
             return approximate(q_table, game, approximator)

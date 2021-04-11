@@ -5,7 +5,7 @@ class Piece:
     def __init__(self, colour):
         self.colour = colour
         self.king = False
-        self.dead = False
+
     
     def __str__(self):
         if self.colour == 'black':
@@ -84,7 +84,6 @@ class Cell:
             for j in move:
                 self.game.board[j[0]].piece = None
                 self.game.board[j[1]].piece = c.piece
-                c.piece.dead = True
                 c.piece = None
                 c = self.game.board[j[1]]
 
@@ -102,9 +101,8 @@ class Cell:
 class Game:
     def __init__(self, turn='black'):
 
-        self.black_pieces = [Piece('black') for _ in range(12)]
-        self.white_pieces = [Piece('white') for _ in range(12)]
-
+        black_pieces = [Piece('black') for _ in range(12)]
+        white_pieces = [Piece('white') for _ in range(12)]
         board = [Cell(i, p, self) for i, p in enumerate(self.black_pieces + ([None]*8) + self.white_pieces)]
 
         for i in range(len(board)):
@@ -140,6 +138,21 @@ class Game:
         self.moves_played = 0
         self.over = False
         self.winner = None
+    
+    def clone(self):
+        cln = Game()
+        for i in range(len(cln.board)):
+            if not self.board[i].piece:
+                cln.board[i].piece = None
+            else:
+                cln.board[i].piece = Piece(self.board[i].piece.colour)
+                cln.board[i].piece.king = self.board[i].piece.king
+        cln.initial_turn = self.initial_turn
+        cln.turn = self.turn
+        cln.moves_played = self.moves_played
+        cln.over = self.over
+        cln.winner = self.winner
+
     
     def outcome(self):
         if self.winner == None:
