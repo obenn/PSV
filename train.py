@@ -146,13 +146,13 @@ def play_test(model, gameclass, p1=True):
         print(f"Computer played: {tmove}")
     print(f"Winner is {game.winner}")
 
-def random_test(model, gameclass, p1=True, random_override=False, verbose=False):
+def random_test(model, gameclass, p1=True, random_override=False, keep_training_override=None, verbose=False):
     start = time()
     game = gameclass()
     if not p1:
         if verbose:
             print("Model is black")
-        game.do_move(get_move(model, game, approximator=gameclass.approximator, random_override=random_override))
+        game.do_move(get_move(model, game, approximator=gameclass.approximator, random_override=random_override, keep_training_override=keep_training_override))
     else:
         if verbose:
             print("Model is white")
@@ -160,7 +160,7 @@ def random_test(model, gameclass, p1=True, random_override=False, verbose=False)
         game.do_move(game.random_move())
         if game.over:
             break
-        game.do_move(get_move(model, game, approximator=gameclass.approximator, random_override=random_override))
+        game.do_move(get_move(model, game, approximator=gameclass.approximator, random_override=random_override, keep_training_override=keep_training_override))
     if verbose:
         print(f"Winner is {game.winner}")
     return p1 == (game.winner == 'white'), time() - start
