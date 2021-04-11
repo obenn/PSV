@@ -14,14 +14,6 @@ def train_and_test(reps, kto, testgames):
     for _ in tqdm(range(reps)):
         model['params']['discount_factor'] += (1/reps)*(1-init_df)
         train.train_model_once(model, checkersgame.Game())
-    results = []
-    times = []
-    print("Playing model")
-    for i in tqdm(range(testgames)):
-        r, t = train.random_test(model, checkersgame.Game, p1=i > (testgames/2))
-        results.append(r)
-        times.append(t)
-    print(f"Won {sum(results)}/{testgames} games, average time of {mean(times)} with stdev {stdev(times)}")
 
     results = []
     times = []
@@ -31,6 +23,16 @@ def train_and_test(reps, kto, testgames):
         results.append(r)
         times.append(t)
     print(f"Won {sum(results)}/{testgames} games, average time of {mean(times)} with stdev {stdev(times)}")
+
+    results = []
+    times = []
+    print("Playing model")
+    for i in tqdm(range(testgames)):
+        r, t = train.random_test(model, checkersgame.Game, p1=i > (testgames/2))
+        results.append(r)
+        times.append(t)
+    print(f"Won {sum(results)}/{testgames} games, average time of {mean(times)} with stdev {stdev(times)}")
+
 
     results = []
     times = []
