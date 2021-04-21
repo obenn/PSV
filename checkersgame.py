@@ -267,7 +267,7 @@ class Game:
             for i in range(nrange[0][0], nrange[0][1] + 1):
                 for j in range(nrange[1][0], nrange[1][1] + 1):
                     if ghasval((i, j)):
-                        if ng[gton((i, j))] == pg[gton((i - diff[0], j - diff[1]))]:
+                        if ng[gton((i - diff[0], j - diff[1]))] == pg[gton((i, j))]:
                             similar_cells += 1
                     else:
                         similar_cells += 1
